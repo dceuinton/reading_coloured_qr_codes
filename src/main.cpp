@@ -13,17 +13,33 @@ using namespace cv;
 int CVBW     = CV_8UC1; // Black and white
 int CVCOLOUR = CV_8UC3; // Colour
 
+// Hardcoded for the QR code types that we are using in this assignment
+const int SEG1_WIDTH  = 41;
+const int SEG1_HEIGHT = 6;
+const int SEG2_WIDTH  = 47;
+const int SEG2_HEIGHT = 35;
+const int SEG3_WIDTH  = 35;
+const int SEG3_HEIGHT = 6;
+
+int boxWidth  = 20;
+int boxHeight = 20;
+
+Point seg1Start;
+Point seg2Start;
+Point seg3Start;
+
 void displayImage              (const char *filename);
 void displayBlackWhiteImage    (const char *filename);
 void displayOnlyBlackImage     (const char *filename);
 void displayOnlyBlueImage      (const char *filename);
 void displayCannyTransform     (const char *filename);
 void displayHoughTransform     (const char *filename);
-void getWidthAndHeightOfSquares(const char *filename); 
-int getWidth(Vec4i &vec);
-int getHeight(Vec4i &vec);
+vector<Vec4i>* diplayAndPrintWidthAndHeightOfSquares(const char *filename); 
+int getWidth     (Vec4i &vec);
+int getHeight    (Vec4i &vec);
 bool isHorizontal(Vec4i &vec);
-bool isVertical(Vec4i &vec);
+bool isVertical  (Vec4i &vec);
+void setWidthHeightAndPoints(const char *filename);
 
 int main(int argc, char const *argv[]) {
 	const char *filename;
@@ -37,14 +53,14 @@ int main(int argc, char const *argv[]) {
 	}
 
 	printf("Opening %s\n", filename);
-	// displayImage(filename);
+	displayImage(filename);
 	// displayBlackWhiteImage(filename);
 	// displayOnlyBlackImage(filename);
 	// displayOnlyBlueImage(filename);
 	// displayCannyTransform(filename);
-	displayHoughTransform(filename);
-	getWidthAndHeightOfSquares(filename);
-
+	// displayHoughTransform(filename);
+	// diplayAndPrintWidthAndHeightOfSquares(filename);
+	setWidthHeightAndPoints(filename);
 	return 0;
 }
 
@@ -202,18 +218,17 @@ void displayHoughTransform(const char *filename) {
 	image = NULL;
 }
 
-
-
 // The gap can't be less than 5 or we won't find it.
 
-void getWidthAndHeightOfSquares(const char *filename) {
+vector<Vec4i>* diplayAndPrintWidthAndHeightOfSquares(const char *filename) {
 	Mat *image = getHardCodedCanny(filename);
 	Mat output;
 	vector<Vec4i> *lines = getHardCodedHoughLines(filename);
+	vector<Vec4i> *importantVecs = new vector<Vec4i>();
 
 	if (lines->size() == 0) {
 		printf("ERROR: getHardCodedHoughLines failed.\n");
-		return;
+		return NULL;
 	}
 	vector<Vec4i> &lineAdr = *lines;
 	Vec4i vec = lineAdr[0];
@@ -272,6 +287,11 @@ void getWidthAndHeightOfSquares(const char *filename) {
 	printf("Highest Vec:         (%i, %i, %i, %i)\n", topMostVec[0], topMostVec[1], topMostVec[2], topMostVec[3]);
 	printf("Second Highest Vec:  (%i, %i, %i, %i)\n", secondTopMostVec[0], secondTopMostVec[1], secondTopMostVec[2], secondTopMostVec[3]);
 
+	importantVecs->push_back(leftMostVec);
+	importantVecs->push_back(secondLeftMostVec);
+	importantVecs->push_back(topMostVec);
+	importantVecs->push_back(secondTopMostVec);
+
 	cvtColor(*image, output, CV_GRAY2BGR);
 
 	line(output, Point(leftMostVec[0], leftMostVec[1]), Point(leftMostVec[2], leftMostVec[3]), Scalar(0, 0, 255), 3, CV_AA);
@@ -284,6 +304,54 @@ void getWidthAndHeightOfSquares(const char *filename) {
 
 	delete lines;
 	lines = NULL;
+
+	return importantVecs;
+}
+
+void setWidthHeightAndPoints(const char *filename) {
+	vector<Vec4i> *importantVecs = diplayAndPrintWidthAndHeightOfSquares(filename);
+
+	boxWidth = abs(importantVecs->at(0)[0] - importantVecs->at(1)[0]);
+	boxHeight = abs(importantVecs->at(2)[1] - importantVecs->at(3)[1]);
+
+	printf("boxWidth:  %i\n", boxWidth);
+	printf("boxHeight: %i\n", boxHeight);
+
+	// importantVecs 0 is left most
+	// importantVecs 1 is second left most
+	// importantVecs 2 is top most
+	// importantVecs 3 is second  top most
+
+	int topMostX1 = importantVecs->at(2)[0];
+	int topMostX2 = importantVecs->at(2)[2];
+
+	if (topMostX1 < topMostX2) {
+		seg1Start.x = topMostX1;
+	} else {
+		seg1Start.x = topMostX2;
+	}
+	seg1Start.y = importantVecs->at(2)[1];
+
+	seg2Start.x = importantVecs->at(0)[0];
+	seg3Start.x = seg1Start.x;
+
+	int leftMostY1 = importantVecs->at(0)[1];
+	int leftMostY2 = importantVecs->at(0)[3];
+
+	if (leftMostY1 < leftMostY2) {
+		seg2Start.y = leftMostY1;
+		seg3Start.y = leftMostY2;
+	} else {
+		seg2Start.y = leftMostY2;
+		seg3Start.y = leftMostY1;
+	}
+	
+	printf("seg1Start (%i, %i)\n", seg1Start.x, seg1Start.y);
+	printf("seg2Start (%i, %i)\n", seg2Start.x, seg2Start.y);
+	printf("seg3Start (%i, %i)\n", seg3Start.x, seg3Start.y);
+
+	delete importantVecs;
+	importantVecs = NULL;
 }
 
 int getWidth(Vec4i &vec) {
@@ -301,4 +369,5 @@ bool isHorizontal(Vec4i &vec) {
 bool isVertical(Vec4i &vec) {
 	return (vec[0] == vec[2]) ? true : false;
 }
+
 
