@@ -13,12 +13,13 @@ using namespace cv;
 int CVBW     = CV_8UC1; // Black and white
 int CVCOLOUR = CV_8UC3; // Colour
 
-void displayImage          (const char *filename);
-void displayBlackWhiteImage(const char *filename);
-void displayOnlyBlackImage (const char *filename);
-void displayOnlyBlueImage  (const char *filename);
-void displayCannyTransform (const char *filename);
-void displayHoughTransform (const char *filename);
+void displayImage              (const char *filename);
+void displayBlackWhiteImage    (const char *filename);
+void displayOnlyBlackImage     (const char *filename);
+void displayOnlyBlueImage      (const char *filename);
+void displayCannyTransform     (const char *filename);
+void displayHoughTransform     (const char *filename);
+void getWidthAndHeightOfSquares(const char *filename); 
 
 int main(int argc, char const *argv[]) {
 	const char *filename;
@@ -38,6 +39,7 @@ int main(int argc, char const *argv[]) {
 	// displayOnlyBlueImage(filename);
 	// displayCannyTransform(filename);
 	displayHoughTransform(filename);
+	getWidthAndHeightOfSquares(filename);
 
 	return 0;
 }
@@ -123,7 +125,7 @@ Mat imageForCanny;
 const char *cannyTrackbarName = "Low Threshold";
 const char *cannyWindowName = "Canny Image";
 int cannyMarkerClick =0;
-int ratio = 4; // Between 2 and 3
+int ratio = 2; // Between 2 and 3
 
 void callback_trackbar(int value, void *object) {
 	Mat toBeShown(imageForCanny.rows, imageForCanny.cols, CVBW);
@@ -164,7 +166,7 @@ Mat* getHardCodedCanny(const char *filename) {
 vector<Vec4i>* getHardCodedHoughLines(const char *filename) {
 	Mat *image = getHardCodedCanny(filename);
 	vector<Vec4i> *lines = new vector<Vec4i>();
-	HoughLinesP(*image, lines, 1, CV_PI/180, 150, 0, 5);
+	HoughLinesP(*image, *lines, 1, CV_PI/180, 150, 0, 5);
 	return lines;
 } 
 
@@ -181,15 +183,71 @@ void displayHoughTransform(const char *filename) {
 
 	for (int i = 0; i < lines.size(); i++) {
 		Vec4i l = lines[i];
-		// CV_AA is antialiased 
-		line(output, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, CV_AA);
-		// imshow(houghWindowName, output);
-		// waitKey(0);
+
+		if (l[0] == l[2]) {
+			// CV_AA is antialiased 
+			line(output, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, CV_AA);
+			// imshow(houghWindowName, output);
+			// waitKey(0);
+		}
 	}
 
 	imshow(houghWindowName, output);
 	waitKey(0);	
 	delete image; 
 	image = NULL;
+}
+
+// The gap can't be less than 5 or we won't find it.
+
+void getWidthAndHeightOfSquares(const char *filename) {
+	Mat *image = getHardCodedCanny(filename);
+	Mat output;
+	vector<Vec4i> *lines = getHardCodedHoughLines(filename);
+
+	if (lines->size() == 0) {
+		printf("ERROR: getHardCodedHoughLines failed.\n");
+		return;
+	}
+	vector<Vec4i> &lineAdr = *lines;
+	Vec4i vec = lineAdr[0];
+	printf("(%i, %i, %i, %i)\n", vec[0], vec[1], vec[2], vec[3]);
+	printf("Rows: %i\n", image->rows);
+	printf("Cols: %i\n", image->cols);
+	printf("Channels: %i\n", image->channels());
+
+	Vec4i leftMostVec = {1000, 1000, 1000, 1000};
+	Vec4i secondLeftMostVec = {1000, 1000, 1000, 1000};
+
+	for (int i = 0; i < lines->size(); i++) {
+		Vec4i vec = lineAdr[i];
+		if (vec[0] == vec[2]) {
+			if (vec[0] < leftMostVec[0]) {
+				leftMostVec = vec;
+			} else if (vec[0] <= secondLeftMostVec[0]) {
+				if (vec[0] - leftMostVec[0] > 5) {
+					// int prevDif = abs(secondLeftMostVec[1] - secondLeftMostVec[3]);
+					// int vecDif = abs(vec[1] - vec[3]);
+					// if (vecDif > prevDif) {
+						secondLeftMostVec = vec;
+					// }
+				}
+			}
+		}
+	}
+
+	printf("LeftMostVec: (%i, %i, %i, %i)\n", leftMostVec[0], leftMostVec[1], leftMostVec[2], leftMostVec[3]);
+	printf("SecondLeftMostVec: (%i, %i, %i, %i)\n", secondLeftMostVec[0], secondLeftMostVec[1], secondLeftMostVec[2], secondLeftMostVec[3]);
+
+	cvtColor(*image, output, CV_GRAY2BGR);
+
+	line(output, Point(leftMostVec[0], leftMostVec[1]), Point(leftMostVec[2], leftMostVec[3]), Scalar(0, 0, 255), 3, CV_AA);
+	line(output, Point(secondLeftMostVec[0], secondLeftMostVec[1]), Point(secondLeftMostVec[2], secondLeftMostVec[3]), Scalar(0, 0, 255), 3, CV_AA);
+
+	imshow("Width will be inbetween the lines", output);
+	waitKey(0);
+
+	delete lines;
+	lines = NULL;
 }
 
