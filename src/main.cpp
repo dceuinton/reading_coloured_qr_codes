@@ -20,6 +20,10 @@ void displayOnlyBlueImage      (const char *filename);
 void displayCannyTransform     (const char *filename);
 void displayHoughTransform     (const char *filename);
 void getWidthAndHeightOfSquares(const char *filename); 
+int getWidth(Vec4i &vec);
+int getHeight(Vec4i &vec);
+bool isHorizontal(Vec4i &vec);
+bool isVertical(Vec4i &vec);
 
 int main(int argc, char const *argv[]) {
 	const char *filename;
@@ -198,6 +202,8 @@ void displayHoughTransform(const char *filename) {
 	image = NULL;
 }
 
+
+
 // The gap can't be less than 5 or we won't find it.
 
 void getWidthAndHeightOfSquares(const char *filename) {
@@ -216,38 +222,83 @@ void getWidthAndHeightOfSquares(const char *filename) {
 	printf("Cols: %i\n", image->cols);
 	printf("Channels: %i\n", image->channels());
 
-	Vec4i leftMostVec = {1000, 1000, 1000, 1000};
+	Vec4i leftMostVec       = {1000, 1000, 1000, 1000};
 	Vec4i secondLeftMostVec = {1000, 1000, 1000, 1000};
+	Vec4i topMostVec        = {1000, 1000, 1000, 1000};
+	Vec4i secondTopMostVec  = {1000, 1000, 1000, 1000};
+
+	int errorGap = 5;
 
 	for (int i = 0; i < lines->size(); i++) {
 		Vec4i vec = lineAdr[i];
-		if (vec[0] == vec[2]) {
+		if (isVertical(vec)) {
 			if (vec[0] < leftMostVec[0]) {
 				leftMostVec = vec;
-			} else if (vec[0] <= secondLeftMostVec[0]) {
-				if (vec[0] - leftMostVec[0] > 5) {
-					// int prevDif = abs(secondLeftMostVec[1] - secondLeftMostVec[3]);
-					// int vecDif = abs(vec[1] - vec[3]);
-					// if (vecDif > prevDif) {
-						secondLeftMostVec = vec;
-					// }
+			}
+		} else if (isHorizontal(vec)) {
+			if (vec[1] < topMostVec[1]) {
+				topMostVec = vec;
+			}
+		}
+	}
+
+	for (int i = 0; i < lines->size(); i++) {
+		Vec4i vec = lineAdr[i];
+		if (isVertical(vec)) {
+			if (vec[0] < secondLeftMostVec[0]) {
+				if (abs(vec[0] - leftMostVec[0]) > errorGap) {
+					secondLeftMostVec = vec;
+				}
+			} else if (vec[0] == secondLeftMostVec[0]) {
+				if (getHeight(vec) > getHeight(secondLeftMostVec)) {
+					secondLeftMostVec = vec;
+				}
+			}
+		} else if (isHorizontal(vec)) {
+			if (vec[1] < secondTopMostVec[1]) {
+				if (abs(vec[1] - topMostVec[1]) > errorGap) {
+					secondTopMostVec = vec;
+				}
+			} else if (vec[1] == secondTopMostVec[1]) {
+				if (getHeight(vec) > getHeight(secondTopMostVec)) {
+					secondTopMostVec = vec;
 				}
 			}
 		}
 	}
 
-	printf("LeftMostVec: (%i, %i, %i, %i)\n", leftMostVec[0], leftMostVec[1], leftMostVec[2], leftMostVec[3]);
-	printf("SecondLeftMostVec: (%i, %i, %i, %i)\n", secondLeftMostVec[0], secondLeftMostVec[1], secondLeftMostVec[2], secondLeftMostVec[3]);
+	printf("Left-est Vec:        (%i, %i, %i, %i)\n", leftMostVec[0], leftMostVec[1], leftMostVec[2], leftMostVec[3]);
+	printf("Second Left-est Vec: (%i, %i, %i, %i)\n", secondLeftMostVec[0], secondLeftMostVec[1], secondLeftMostVec[2], secondLeftMostVec[3]);
+	printf("Highest Vec:         (%i, %i, %i, %i)\n", topMostVec[0], topMostVec[1], topMostVec[2], topMostVec[3]);
+	printf("Second Highest Vec:  (%i, %i, %i, %i)\n", secondTopMostVec[0], secondTopMostVec[1], secondTopMostVec[2], secondTopMostVec[3]);
 
 	cvtColor(*image, output, CV_GRAY2BGR);
 
 	line(output, Point(leftMostVec[0], leftMostVec[1]), Point(leftMostVec[2], leftMostVec[3]), Scalar(0, 0, 255), 3, CV_AA);
 	line(output, Point(secondLeftMostVec[0], secondLeftMostVec[1]), Point(secondLeftMostVec[2], secondLeftMostVec[3]), Scalar(0, 0, 255), 3, CV_AA);
+	line(output, Point(topMostVec[0], topMostVec[1]), Point(topMostVec[2], topMostVec[3]), Scalar(0, 255, 0), 3, CV_AA);
+	line(output, Point(secondTopMostVec[0], secondTopMostVec[1]), Point(secondTopMostVec[2], secondTopMostVec[3]), Scalar(0, 255, 0), 3, CV_AA);
 
 	imshow("Width will be inbetween the lines", output);
 	waitKey(0);
 
 	delete lines;
 	lines = NULL;
+}
+
+int getWidth(Vec4i &vec) {
+	return abs(vec[0] - vec[2]);
+}
+
+int getHeight(Vec4i &vec) {
+	return abs(vec[1] - vec[3]);
+}
+
+bool isHorizontal(Vec4i &vec) {
+	return (vec[1] == vec[3]) ? true : false;
+}
+
+bool isVertical(Vec4i &vec) {
+	return (vec[0] == vec[2]) ? true : false;
 }
 
