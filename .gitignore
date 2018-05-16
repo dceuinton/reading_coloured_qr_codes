@@ -1,0 +1,4 @@
+# My Git Ignore file for the assignment 2
+
+src/obj/
+main
