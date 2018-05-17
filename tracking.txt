@@ -1,0 +1,15 @@
+abcde.jpg                         	 YES
+abcde_rotated.jpg  			  		 NO
+abcde_rotated_scaled.jpg 			 NO
+congratulations.jpg 				 YES
+congratulations_rotated.jpg			 NO
+congratulations_rotated_scaled.jpg   NO
+congratulations_scaled.jpg           YES
+Darwin.jpg							 YES
+Darwin_rotated.jpg					 NO
+Darwin_rotated_scaled.jpg			 NO
+Darwin_scaled.jpg				 	 YES
+farfaraway.jpg						 YES
+farfaraway_rotated.jpg				 NO
+farfaraway_rotated_scaled.jpg		 NO
+farfaraway_scaled.jpg				 NO

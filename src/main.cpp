@@ -26,6 +26,8 @@ const int SEG2_HEIGHT = 35;
 const int SEG3_WIDTH  = 35;
 const int SEG3_HEIGHT = 6;
 
+const char *defaultFilename = "images/abcde.jpg";
+
 int boxWidth  = 20;
 int boxHeight = 20;
 
@@ -48,11 +50,13 @@ bool isVertical  (Vec4i &vec);
 void setWidthHeightAndPoints(const char *filename);
 void sampleFirstSegment(const char *filename, bool drawCircles);
 void convertSample(vector<int> &binary);
+void displayCornerDetection(const char* filename);
+Mat* filterToBlue(const char *filename);
 
 int main(int argc, char const *argv[]) {
 	const char *filename;
 	if (argc == 1) {
-		filename = "images/abcde.jpg";
+		filename = defaultFilename;
 	} else if (argc == 2) {
 		filename = argv[1];
 	} else {
@@ -61,16 +65,19 @@ int main(int argc, char const *argv[]) {
 	}
 
 	printf("Opening %s\n", filename);
-	displayImage(filename);
+	// displayImage(filename);
 	// displayBlackWhiteImage(filename);
 	// displayOnlyBlackImage(filename);
 	// displayOnlyBlueImage(filename);
-	// displayCannyTransform(filename);
+	displayCannyTransform(filename);
 	// displayHoughTransform(filename);
 
 	// diplayAndPrintWidthAndHeightOfSquares(filename, true);
 	// setWidthHeightAndPoints(filename);
-	sampleFirstSegment(filename, true);
+	// sampleFirstSegment(filename, true);
+
+	// displayCornerDetection(filename);
+	// filterToBlue(filename);
 	return 0;
 }
 
@@ -88,15 +95,15 @@ void displayBlackWhiteImage(const char *filename) {
 	waitKey(0);
 }
 
-void displayOnlyBlackImage(const char *filename) {
-	const char *windowName = "Only Black Image";
-	Mat image = imread(filename, 0);
+Mat* filterOnlyBlack(const char* filename) {
+	Mat src = imread(filename, 0);
+	Mat *dst = new Mat(src.size(), CVBW);
 
 	uchar *rowPtr;
 
-	for (int i = 0; i < image.rows; i++) {
-		rowPtr = image.ptr<uchar>(i);
-		for (int j =0; j < image.cols; j++) {
+	for (int i = 0; i < src.rows; i++) {
+		rowPtr = src.ptr<uchar>(i);
+		for (int j =0; j < src.cols; j++) {
 			if (rowPtr[j] < 10) {
 				rowPtr[j] = 0;
 			} else {
@@ -105,24 +112,32 @@ void displayOnlyBlackImage(const char *filename) {
 		}
 	}
 
-	imshow(windowName, image);
+	*dst = src;
 
-	waitKey(0);
+	return dst;
 }
 
-void displayOnlyBlueImage(const char *filename) {
-	const char *windowName = "Only Blue Image";
-	Mat image = imread(filename);
+void displayOnlyBlackImage(const char *filename) {
+	const char *windowName = "Only Black Image";
+	Mat *image = filterOnlyBlack(filename);
+	imshow(windowName, *image);
+	waitKey(0);
+
+	delete image;
+	image = NULL;
+}
+
+Mat* filterToBlue(const char *filename) {
+	Mat src = imread(filename);
+	Mat *dst = new Mat(src.size(), CVCOLOUR);
 
 	uchar *rowPtr;
-	int channels = image.channels();
-	printf("Channels: %i\n", channels);
-	int rows = image.rows;
-	// int cols = image.cols * channels;
-	int cols = image.cols;
+	int channels = src.channels();
+	int rows = src.rows;
+	int cols = src.cols;
 
 	for (int i = 0; i < rows; i++) {
-		rowPtr = image.ptr<uchar>(i);
+		rowPtr = src.ptr<uchar>(i);
 		for (int j =0; j < cols; j++) {
 			if (rowPtr[j * channels] < 150) {
 				rowPtr[j * channels] = 255;
@@ -139,10 +154,76 @@ void displayOnlyBlueImage(const char *filename) {
 			}
 		}
 	}
-	imshow(windowName, image);
+
+	*dst = src; 
+	// imshow("Quick test blue", *dst);
+	// waitKey(0);
+	return dst;
+}
+
+void displayOnlyBlueImage(const char *filename) {
+	const char *windowName = "Only Blue Image";
+	Mat *blue = filterToBlue(filename);
+	imshow(windowName, *blue);
+	waitKey(0);
+	delete blue;
+	blue = NULL;
+}
+
+// ------------------------------------------------------------
+// Corners
+// ------------------------------------------------------------
+
+const char *cornerWindowName     = "corners";
+const char *cornerCornerWindow   = "corners detected";
+const char *cornerTrackbarName   = "Threshold";
+Mat src, srcGrey;
+int cornerThresh = 145;
+int cornerMaxThresh = 255;
+
+void cornerTrackbarCallback(int val, void *object) {
+	Mat dst, dstNorm, dstNormScaled;
+	dst = Mat::zeros(src.size(), CV_32FC1);
+
+	int blockSize = 2;
+	int apertureSize = 3;
+	double k = 0.08;
+
+	cornerHarris(srcGrey, dst, blockSize, apertureSize, k, BORDER_DEFAULT);
+
+	normalize(dst, dstNorm, 0, 255, NORM_MINMAX, CV_32FC1, Mat());
+	convertScaleAbs(dstNorm, dstNormScaled);
+
+	for( int j = 0; j < dstNorm.rows ; j++ )
+     { for( int i = 0; i < dstNorm.cols; i++ )
+          {
+            if( (int) dstNorm.at<float>(j,i) > cornerThresh )
+              {
+               circle( dstNormScaled, Point( i, j ), 5,  Scalar(0), 2, 8, 0 );
+              }
+          }
+    }
+  
+    namedWindow( cornerCornerWindow, CV_WINDOW_AUTOSIZE );
+    imshow( cornerCornerWindow, dstNormScaled );
+}
+
+void displayCornerDetection(const char* filename) {
+	src = imread(filename, 1);
+	cvtColor(src, srcGrey, CV_BGR2GRAY);
+
+	namedWindow(cornerWindowName, CV_WINDOW_AUTOSIZE);
+	createTrackbar(cornerTrackbarName, cornerWindowName, &cornerThresh, cornerMaxThresh, cornerTrackbarCallback);
+	
+	cornerTrackbarCallback(0, 0);
+
+	imshow(cornerWindowName, src);
 	waitKey(0);
 }
 
+// ------------------------------------------------------------
+// ------------------------------------------------------------
+// ------------------------------------------------------------
 // Params for Canny 
 // Low Threshold: 30
 // High Threshold : ratio = 3 * Low Threshold
@@ -186,12 +267,32 @@ void displayCannyTransform(const char *filename) {
 
 Mat* getHardCodedCanny(const char *filename) {
 	Mat image = imread(filename, 0);
-	Mat *output = new Mat(image.size(), CVBW);
+	Mat goodImage;
 
-	Canny(image, *output, 25, 100);
+	int rows = image.rows;
+	int cols = image.cols;
+
+	// if (rows == cols) {
+	// 	if ((rows !=1000) && (cols != 1000)) {
+	// 		Size size(1000,1000);
+	// 		resize(image, goodImage, size);
+	// 	} else {
+	// 		goodImage = image;
+	// 	}
+	// } 
+
+	goodImage = image;
+
+	Mat *output = new Mat(goodImage.size(), CVBW);
+
+	Canny(goodImage, *output, 50, 100);
 
 	return output;
 }
+
+// ------------------------------------------------------------
+// ------------------------------------------------------------
+// ------------------------------------------------------------
 
 vector<Vec4i>* getHardCodedHoughLines(const char *filename) {
 	Mat *image = getHardCodedCanny(filename);
@@ -214,12 +315,12 @@ void displayHoughTransform(const char *filename) {
 	for (int i = 0; i < lines.size(); i++) {
 		Vec4i l = lines[i];
 
-		if (l[0] == l[2]) {
+		// if (l[0] == l[2]) {
 			// CV_AA is antialiased 
 			line(output, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, CV_AA);
 			// imshow(houghWindowName, output);
 			// waitKey(0);
-		}
+		// }
 	}
 
 	imshow(houghWindowName, output);
@@ -227,6 +328,20 @@ void displayHoughTransform(const char *filename) {
 	delete image; 
 	image = NULL;
 }
+
+// bool isBetweenHorizontally(Vec4i &vec, Vec4i &checkAgainst) {
+// 	int length = abs(vec[0] - vec[2]);
+
+// 	int center;
+
+// 	if (vec[0] < vec[2]) {
+// 		center = (int) vec[0] + length/2;
+// 	} else {
+// 		center = (int) vec[2] + length/2;
+// 	}
+
+// 	// if (center)
+// }
 
 // The gap can't be less than 5 or we won't find it.
 
@@ -272,6 +387,7 @@ vector<Vec4i>* diplayAndPrintWidthAndHeightOfSquares(const char *filename, bool 
 		if (isVertical(vec)) {
 			if (vec[0] < secondLeftMostVec[0]) {
 				if (abs(vec[0] - leftMostVec[0]) > errorGap) {
+					// if ()
 					secondLeftMostVec = vec;
 				}
 			} else if (vec[0] == secondLeftMostVec[0]) {
@@ -385,7 +501,7 @@ bool isVertical(Vec4i &vec) {
 void checkValueAndPush(uchar val, vector<int> &values) {
 	// printf("Val: %u\n", val);
 
-	uchar margin = 10;
+	uchar margin = 20;
 
 	uchar lower = 0 + margin;
 	uchar upper = 255 - margin;
@@ -581,13 +697,13 @@ void convertSample(vector<int> &binary) {
 	}
 
 	// printNumbers(numbers);
-	// printMessage(message);
+	printMessage(message);
 	printf("Binary size:  %i\n", (int) binary.size());
 	printf("Message size: %i\n", (int) message.size());
 
-	Mat image = imread("images/abcde.jpg", 1);
-	imshow("Check", image);
-	waitKey(0);
+	// Mat image = imread("images/abcde.jpg", 1);
+	// imshow("Check", image);
+	// waitKey(0);
 
 	deleteBinaryNumbersInVector(numbers);
 }
