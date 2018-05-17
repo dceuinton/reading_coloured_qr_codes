@@ -4,6 +4,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <vector>
+#include <cmath>
+// #include "medianFilter.h"
 // #include "decoding.h"
 
 using namespace std;
@@ -52,6 +54,7 @@ void sampleFirstSegment(const char *filename, bool drawCircles);
 void convertSample(vector<int> &binary);
 void displayCornerDetection(const char* filename);
 Mat* filterToBlue(const char *filename);
+Mat* rotateImage(const char* filename, bool show);
 
 int main(int argc, char const *argv[]) {
 	const char *filename;
@@ -69,11 +72,16 @@ int main(int argc, char const *argv[]) {
 	// displayBlackWhiteImage(filename);
 	// displayOnlyBlackImage(filename);
 	// displayOnlyBlueImage(filename);
-	displayCannyTransform(filename);
+	// displayCannyTransform(filename);
 	// displayHoughTransform(filename);
 
-	// diplayAndPrintWidthAndHeightOfSquares(filename, true);
+	const char *imageName = "images/rotatedTest.jpg";
+	Mat *image = rotateImage(filename, true);
+	imwrite(imageName, *image);
+
+	diplayAndPrintWidthAndHeightOfSquares(imageName, true);
 	// setWidthHeightAndPoints(filename);
+
 	// sampleFirstSegment(filename, true);
 
 	// displayCornerDetection(filename);
@@ -232,16 +240,16 @@ void displayCornerDetection(const char* filename) {
 // Low: 25
 // Ratio: 4 
 
-Mat imageForCanny;
+Mat *imageForCanny;
 const char *cannyTrackbarName = "Low Threshold";
 const char *cannyWindowName = "Canny Image";
 int cannyMarkerClick =0;
-int ratio = 2; // Between 2 and 3
+int ratio = 3; // Between 2 and 3
 
 void callback_trackbar(int value, void *object) {
-	Mat toBeShown(imageForCanny.rows, imageForCanny.cols, CVBW);
+	Mat toBeShown(imageForCanny->rows, imageForCanny->cols, CVBW);
 
-	Canny(imageForCanny, toBeShown, cannyMarkerClick, ratio*cannyMarkerClick);
+	Canny(*imageForCanny, toBeShown, cannyMarkerClick, ratio*cannyMarkerClick);
 
 	imshow(cannyWindowName, toBeShown);
 }
@@ -251,15 +259,15 @@ void displayCannyTransform(const char *filename) {
 	int highThreshold = 100;
 	int maxLowThreshold = (int) 255/ratio;
 	
-	imageForCanny = imread(filename, 0);
-	Mat dst(imageForCanny.rows, imageForCanny.cols, CVBW);
+	imageForCanny = filterOnlyBlack(filename);
+	Mat dst(imageForCanny->rows, imageForCanny->cols, CVBW);
 
 	namedWindow(cannyWindowName, WINDOW_AUTOSIZE);	
 	
 	createTrackbar(cannyTrackbarName, cannyWindowName, &cannyMarkerClick, maxLowThreshold, callback_trackbar);
 	setTrackbarPos(cannyTrackbarName, cannyWindowName, 50);	
 
-	Canny(imageForCanny, dst, lowThreshold, highThreshold);
+	Canny(*imageForCanny, dst, lowThreshold, highThreshold);
 
 	imshow(cannyWindowName, dst);
 	waitKey(0);
@@ -300,6 +308,70 @@ vector<Vec4i>* getHardCodedHoughLines(const char *filename) {
 	HoughLinesP(*image, *lines, 1, CV_PI/180, 150, 0, 5);
 	return lines;
 } 
+
+Mat* rotateImage(Mat *src, bool show) {
+	Mat *dst = new Mat(src->size(), CVCOLOUR);
+	vector<Vec4i> *lines = getHardCodedHoughLines(filename);
+	vector<Vec4i> &lineAdr = *lines;
+
+	Point2f center(src->cols/2.0f, src->rows/2.0f);
+
+	Vec4i vec = lineAdr[0]; 
+	int x1 = vec[0];
+	int y1 = vec[1];
+	int x2 = vec[2];
+	int y2 = vec[3];
+
+	float tanTheta = (y1 + y2)/(x1 + x2);
+	float radians = atan(tanTheta);
+	float degrees = radians * 180/M_PI;
+	double scale = 1;
+
+	Mat rotation = getRotationMatrix2D(center, -degrees, scale);
+
+	warpAffine(*src, *dst, rotation, dst->size(), INTER_LINEAR, BORDER_REPLICATE, 0);
+
+	if (show) {
+		imshow("Testing Rotations", *dst);
+		waitKey(0);
+	}
+	delete lines;
+	lines = NULL;
+
+	return dst;
+}
+
+Mat* filterToBlue(Mat *src) {
+	uchar *rowPtr;
+	int channels = src->channels();
+	int rows = src->rows;
+	int cols = src->cols;
+
+	for (int i = 0; i < rows; i++) {
+		rowPtr = src->ptr<uchar>(i);
+		for (int j =0; j < cols; j++) {
+			if (rowPtr[j * channels] < 150) {
+				rowPtr[j * channels] = 255;
+				rowPtr[j * channels + 1] = 255;
+				rowPtr[j * channels + 2] = 255;
+			} else if (rowPtr[j * channels + 1] > 100) {
+				rowPtr[j * channels + 0] = 255;
+				rowPtr[j * channels + 1] = 255;
+				rowPtr[j * channels + 2] = 255;
+			} else if (rowPtr[j * channels + 2] > 100) {
+				rowPtr[j * channels + 0] = 255;
+				rowPtr[j * channels + 1] = 255;
+				rowPtr[j * channels + 2] = 255;
+			}
+		}
+	}
+
+	return src;
+}
+
+void displayHoughCircles(Mat *src) {
+
+}
 
 const char *houghWindowName = "Hough Image";
 
