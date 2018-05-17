@@ -61,7 +61,7 @@ int main(int argc, char const *argv[]) {
 	}
 
 	printf("Opening %s\n", filename);
-	// displayImage(filename);
+	displayImage(filename);
 	// displayBlackWhiteImage(filename);
 	// displayOnlyBlackImage(filename);
 	// displayOnlyBlueImage(filename);
@@ -390,16 +390,16 @@ void checkValueAndPush(uchar val, vector<int> &values) {
 	uchar lower = 0 + margin;
 	uchar upper = 255 - margin;
 
-	printf("Val: %u\n", val);
+	// printf("Val: %u\n", val);
 
 	if (val < lower) {
 		values.push_back(0);
-		printf("Going in as 0\n\n");
+		// printf("Going in as 0\n\n");
 	} else if (val > upper) {
-		printf("Goint in as 1\n\n");
+		// printf("Goint in as 1\n\n");
 		values.push_back(1);
 	} else {
-		printf("ERROR: Margin or read failed at index %i with val: %u", (int) values.size()+1, val);
+		printf("ERROR: Margin or read failed at index %i with val: %u\n", (int) values.size()+1, val);
 		return;
 	}
 }
@@ -459,7 +459,51 @@ void sampleFirstSegment(const char *filename, bool drawCircles) {
 		// break;
 	}
 
-	for ()
+// SEGMENT 2
+	xLocation = (int) seg2Start.x + boxWidth/2;
+	yLocation = (int) seg2Start.y + boxHeight/2;
+	for (int i = 0; i < SEG2_HEIGHT; i++) {
+
+		rowStart = image.ptr<uchar>(yLocation + i*boxHeight);
+
+		for (int j = 0; j < SEG2_WIDTH; j++) {
+			b = rowStart[(xLocation+j*boxWidth) * channels];
+			g = rowStart[(xLocation+j*boxWidth) * channels + 1];
+			r = rowStart[(xLocation+j*boxWidth) * channels + 2];
+			// printf("(%u, %u, %u)\n", b, g, r);
+			checkValueAndPush(b, binary);
+			checkValueAndPush(g, binary);
+			checkValueAndPush(r, binary);
+
+			if (drawCircles) {
+				Point center(xLocation + j*boxWidth, yLocation + i*boxHeight);
+				circle(image, center, 5, Scalar(50, 255, 125), 3);	
+			}
+		}
+	}
+
+//SEGMENT 3
+	xLocation = (int) seg3Start.x + boxWidth/2;
+	yLocation = (int) seg3Start.y + boxHeight/2;
+	for (int i = 0; i < SEG3_HEIGHT; i++) {
+
+		rowStart = image.ptr<uchar>(yLocation + i*boxHeight);
+
+		for (int j = 0; j < SEG3_WIDTH; j++) {
+			b = rowStart[(xLocation+j*boxWidth) * channels];
+			g = rowStart[(xLocation+j*boxWidth) * channels + 1];
+			r = rowStart[(xLocation+j*boxWidth) * channels + 2];
+			// printf("(%u, %u, %u)\n", b, g, r);
+			checkValueAndPush(b, binary);
+			checkValueAndPush(g, binary);
+			checkValueAndPush(r, binary);
+
+			if (drawCircles) {
+				Point center(xLocation + j*boxWidth, yLocation + i*boxHeight);
+				circle(image, center, 5, Scalar(50, 255, 125), 3);	
+			}
+		}
+	}
 
 	// printBinary(binary);
 
@@ -509,12 +553,18 @@ void printNumbers(vector<BinaryNumber*> &numbers) {
 	}
 }
 
+void deleteBinaryNumbersInVector(vector<BinaryNumber*> &vec) {
+	for (int i = 0; i < vec.size(); i++) {
+		delete vec.at(i);
+	}
+}
+
 void convertSample(vector<int> &binary) {
 	vector<BinaryNumber*> numbers;
 
-	printBinary(binary);
+	// printBinary(binary);
 
-	// printf("Binary size: %i\n", (int) binary.size());
+	
 
 	for (int i = 0; i < (int) binary.size()/6; i++) {
 		int counter = 6*i;
@@ -531,11 +581,15 @@ void convertSample(vector<int> &binary) {
 	}
 
 	// printNumbers(numbers);
-	printMessage(message);
+	// printMessage(message);
+	printf("Binary size:  %i\n", (int) binary.size());
+	printf("Message size: %i\n", (int) message.size());
 
 	Mat image = imread("images/abcde.jpg", 1);
 	imshow("Check", image);
 	waitKey(0);
+
+	deleteBinaryNumbersInVector(numbers);
 }
 
 
