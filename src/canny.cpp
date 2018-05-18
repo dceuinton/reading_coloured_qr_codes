@@ -75,12 +75,12 @@ void showHoughLines(Mat *src) {
 
 vector<Vec3f>* getHoughCircles(Mat* src) {
 	vector<Vec3f>* circles = new vector<Vec3f>();
-	makeImagePerpendicular(src, true);
-	// filterToOnlyBlue(src);
-	// cvtColor(*src, *src, CV_BGR2GRAY);
+	Mat *dst = rotateImage(src, true);
+	filterToOnlyBlue(dst);
+	cvtColor(*dst, *dst, CV_BGR2GRAY);
 
-	// imshow("Testing", *src);
-	// waitKey(0);
+	imshow("Testing", *dst);
+	waitKey(0);
 
 	return circles;
 }

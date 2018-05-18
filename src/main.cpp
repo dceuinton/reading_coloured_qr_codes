@@ -82,8 +82,8 @@ int main(int argc, char const *argv[]) {
 	// transformToCanny(src);
 
 	// showHoughLines(src);
-	src = rotateImage(src, true);
-	// getHoughCircles(src);
+	// src = rotateImage(src, true);
+	getHoughCircles(src);
 
 	displayImage(src, "Helloworld");
 	// displayImage(filename);

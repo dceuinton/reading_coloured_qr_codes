@@ -59,8 +59,8 @@ Mat* rotateImage(Mat *src, bool show) {
 	delete lines;
 	lines = NULL;
 
-	delete src;
-	src = NULL;
+	// delete src;
+	// src = NULL;
 
 	return dst;
 }
