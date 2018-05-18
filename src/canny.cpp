@@ -75,33 +75,35 @@ void showHoughLines(Mat *src) {
 
 vector<Vec3f>* getHoughCircles(Mat* src, bool show) {
 	vector<Vec3f>* circles = new vector<Vec3f>();
-	Mat *dst = rotateImage(src, true);
+	Mat *dst = rotateImage(src, false);
 	Mat original = *dst;
+
+	// imshow("original", original);
+	// waitKey(0);
+
 	filterToOnlyBlue(dst);
 	cvtColor(*dst, *dst, CV_BGR2GRAY);
 
-	imshow("Testing", *dst);
-	waitKey(0);
+	// imshow("Testing", *dst);
+	// waitKey(0);
 
 	GaussianBlur(*dst, *dst, Size(9,9), 2, 2);
 
-	imshow("Testing 2", *dst);
-	waitKey(0);
+	// imshow("Testing 2", *dst);
+	// waitKey(0);
 
 	HoughCircles(*dst, *circles, CV_HOUGH_GRADIENT, 1, 3*dst->rows/7, 100, 80, 0, dst->rows/5);
-
-	for (int i = 0; i < circles->size(); i++) {
-		Point center(cvRound(circles->at(i)[0]), cvRound(circles->at(i)[1]));
-		int radius = cvRound(circles->at(i)[2]);
-
-		circle(original, center, radius, Scalar(0,0,255), -1, 8, 0);
-		circle(original, center, radius, Scalar(0,0,255), 3, 8, 0);
-		
-	}
-
 	if (show) {
-		imshow("Drawn Hough Circles", original);
-		waitKey(0);
+		for (int i = 0; i < circles->size(); i++) {
+			Point center(cvRound(circles->at(i)[0]), cvRound(circles->at(i)[1]));
+			int radius = cvRound(circles->at(i)[2]);
+
+			circle(original, center, radius, Scalar(0,255,0), -1, 8, 0);
+			circle(original, center, radius, Scalar(0,0,255), 3, 8, 0);
+			
+		}		
+			imshow("Drawn Hough Circles", original);
+			waitKey(0);
 	}
 
 	return circles;

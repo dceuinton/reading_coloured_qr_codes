@@ -30,8 +30,8 @@ Mat* rotateImage(Mat *src, bool show) {
 	int x2 = longestVec[2];
 	int y2 = longestVec[3];
 
-	printf("Vec: (%i, %i, %i, %i)\n", x1, y1, x2, y2);
-	printf("Length: %lf\n", longestLength);
+	// printf("Vec: (%i, %i, %i, %i)\n", x1, y1, x2, y2);
+	// printf("Length: %lf\n", longestLength);
 
 	double ys = abs(y1 - y2);
 	// printf("Ys %lf\n", ys);
@@ -44,13 +44,21 @@ Mat* rotateImage(Mat *src, bool show) {
 	double degrees = radians * 180/M_PI;
 	double scale = 1;
 
+	if (degrees < 90.0001 && degrees > 89.9999) {
+		degrees = 0.0;
+	}
+
 	// printf("Tan Theta: %lf\n", ysxsdivided);
 	// printf("Radians: %lf\n", radians);
-	printf("Should be rotating by %lf\n", degrees);
+	// printf("Should be rotating by %lf\n", degrees);
 
 	Mat rotation = getRotationMatrix2D(center, -degrees, scale);
 
+	// imshow("Original", *original);
+	// waitKey(0);
+
 	warpAffine(*original, *dst, rotation, dst->size(), INTER_LINEAR, BORDER_REPLICATE, 0);
+	warpAffine(*original, *src, rotation, dst->size(), INTER_LINEAR, BORDER_REPLICATE, 0);
 
 	if (show) {
 		imshow("Rotated Image", *dst);
@@ -93,4 +101,40 @@ void scale(Mat* src) {
 			resize(*src, *src, Size(1500,1500));
 		}
 	}
+}
+
+void rotateBasedOnCircles(Mat *src) {
+	vector<Vec3f> *circles = getHoughCircles(src, true);
+	while(isThereCircleInUpperRightQuadrant(src, circles)) {
+		rotate90CW(src);
+		delete circles;
+		circles = getHoughCircles(src, true);
+	}
+}
+
+bool isThereCircleInUpperRightQuadrant(Mat *src, vector<Vec3f> *circles) {
+	int cols = src->cols;
+	int rows = src->rows;
+
+	int halfCols = (int) cols/2;
+	int halfRows = (int) rows/2;
+
+	bool retVal = false;
+	// printf("Circles size: %i\n", (int) circles->size());
+	// printf("Should be greater than %i, and less than %i to be retried\n", halfCols, halfRows);
+	for (int i = 0; i < circles->size(); i++) {
+		Vec3f circ = circles->at(i);
+		// printf("Circle values: (%lf, %lf))\n", circ[0], circ[1]);
+		if ((circ[0] > halfCols) && (circ[1] < halfRows)) {
+
+			retVal = true;
+		}
+	}
+
+	return retVal;
+}
+
+void rotate90CW(Mat *src) {
+	transpose(*src, *src);
+	flip(*src, *src, 1);
 }

@@ -87,9 +87,11 @@ int main(int argc, char const *argv[]) {
 	// scale(src);
 	medianFilter(src);
 	medianFilter(src);
-	getHoughCircles(src, true);
+	// vector<Vec3f> *circles = getHoughCircles(src, true);
+	rotateBasedOnCircles(src);
 
-	// displayImage(src, "Helloworld");
+
+	displayImage(src, "Helloworld");
 	// displayImage(filename);
 	// displayBlackWhiteImage(filename);
 	// displayOnlyBlackImage(filename);

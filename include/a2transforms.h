@@ -16,5 +16,8 @@ Mat* rotateImage(Mat *src, bool show);
 double getLength(Vec4i &vec);
 void printRotationMatrix(Mat &src);
 void scale(Mat* src);
+void rotateBasedOnCircles(Mat *src);
+bool isThereCircleInUpperRightQuadrant(Mat *src, vector<Vec3f> *circles);
+void rotate90CW(Mat *src);
 
 #endif
