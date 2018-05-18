@@ -104,11 +104,11 @@ void scale(Mat* src) {
 }
 
 void rotateBasedOnCircles(Mat *src) {
-	vector<Vec3f> *circles = getHoughCircles(src, true);
+	vector<Vec3f> *circles = getHoughCircles(src, false);
 	while(isThereCircleInUpperRightQuadrant(src, circles)) {
 		rotate90CW(src);
 		delete circles;
-		circles = getHoughCircles(src, true);
+		circles = getHoughCircles(src, false);
 	}
 }
 

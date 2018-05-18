@@ -50,16 +50,21 @@ void transformToCanny(Mat *src) {
 // ------------------------------------------------------------
 
 vector<Vec4i>* getHoughLines(Mat* src) {
-	transformToCanny(src);
+	Mat copy = *src;
+	transformToCanny(&copy);
 	vector<Vec4i> *lines = new vector<Vec4i>();
-	HoughLinesP(*src, *lines, 1, CV_PI/180, 150, 0, 5);
+	HoughLinesP(copy, *lines, 1, CV_PI/180, 150, 0, 5);
 	return lines;
 }
 
 void showHoughLines(Mat *src) {
 	vector<Vec4i> *lines = getHoughLines(src);
 	Mat dst;
-	cvtColor(*src, dst, CV_GRAY2BGR);	
+	if (src->type() == CV_8UC1) {
+		cvtColor(*src, dst, CV_GRAY2BGR);		
+	} else {
+		dst = *src;
+	}	
 
 	for (int i = 0; i < lines->size(); i++) {
 		Vec4i l = lines->at(i);

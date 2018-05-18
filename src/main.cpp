@@ -10,6 +10,7 @@
 #include "filters.h"
 #include "canny.h"
 #include "a2transforms.h"
+#include "a2qrcode.h"
 
 using namespace std;
 using namespace cv;
@@ -55,7 +56,7 @@ bool isVertical  (Vec4i &vec);
 void setWidthHeightAndPoints(const char *filename);
 void sampleFirstSegment(const char *filename, bool drawCircles);
 void convertSample(vector<int> &binary);
-void displayCornerDetection(const char* filename);
+void displayCornerDetection(Mat *forCorners);
 Mat* filterToBlue(const char *filename);
 Mat* rotateImage(const char* filename, bool show);
 
@@ -73,43 +74,30 @@ int main(int argc, char const *argv[]) {
 	printf("Opening %s\n", filename);
 
 	Mat *src = new Mat();
+	// Mat *src2 = new Mat();
 	*src = imread(filename);
+	// *src2 = imread(filename);
 
-	// filterToOnlyBlue(src);
-
-	// doCanny(src, true);
-
-	// transformToCanny(src);
-
-	// showHoughLines(src);
-	// src = rotateImage(src, true);
-
-	// scale(src);
 	medianFilter(src);
 	medianFilter(src);
-	// vector<Vec3f> *circles = getHoughCircles(src, true);
 	rotateBasedOnCircles(src);
 
+	// displayImage(src, "Image");
 
-	displayImage(src, "Helloworld");
-	// displayImage(filename);
-	// displayBlackWhiteImage(filename);
-	// displayOnlyBlackImage(filename);
-	// displayOnlyBlueImage(filename);
-	// displayCannyTransform(filename);
-	// displayHoughTransform(filename);
+	// filterToOnlyBlack(src);
 
-	// const char *imageName = "images/rotatedTest.jpg";
-	// Mat *image = rotateImage(filename, true);
-	// imwrite(imageName, *image);
 
-	// diplayAndPrintWidthAndHeightOfSquares(imageName, true);
-	// setWidthHeightAndPoints(filename);
 
-	// sampleFirstSegment(filename, true);
+	// displayCornerDetection(src);
 
-	// displayCornerDetection(filename);
-	// filterToBlue(filename);
+	vector<Vec4i> *lines = getHoughLines(src);
+	printf("Height: %i\n", getBoxWidth(lines, src->rows, src->cols));
+	// showHoughLines(src);
+
+	// displayImage(src, filename);
+	
+
+
 	return 0;
 }
 
@@ -231,7 +219,7 @@ void cornerTrackbarCallback(int val, void *object) {
           {
             if( (int) dstNorm.at<float>(j,i) > cornerThresh )
               {
-               circle( dstNormScaled, Point( i, j ), 5,  Scalar(0), 2, 8, 0 );
+               circle( dstNormScaled, Point( i, j ), 8,  Scalar(0), 2, 8, 0 );
               }
           }
     }
@@ -240,9 +228,11 @@ void cornerTrackbarCallback(int val, void *object) {
     imshow( cornerCornerWindow, dstNormScaled );
 }
 
-void displayCornerDetection(const char* filename) {
-	src = imread(filename, 1);
-	cvtColor(src, srcGrey, CV_BGR2GRAY);
+void displayCornerDetection(Mat *forCorners) {
+	src = *forCorners;
+	if (src.type() != CV_8UC1) {
+		cvtColor(src, srcGrey, CV_BGR2GRAY);	
+	}	
 
 	namedWindow(cornerWindowName, CV_WINDOW_AUTOSIZE);
 	createTrackbar(cornerTrackbarName, cornerWindowName, &cornerThresh, cornerMaxThresh, cornerTrackbarCallback);
