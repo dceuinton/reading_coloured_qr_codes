@@ -15,5 +15,6 @@ using namespace cv;
 Mat* rotateImage(Mat *src, bool show);
 double getLength(Vec4i &vec);
 void printRotationMatrix(Mat &src);
+void scale(Mat* src);
 
 #endif

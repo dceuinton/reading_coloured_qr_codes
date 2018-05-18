@@ -9,5 +9,6 @@ void displayImage(Mat *src, const char *windowName);
 void filterToGreyScale(Mat *src);
 void filterToOnlyBlack(Mat *src);
 void filterToOnlyBlue(Mat *src);
+void medianFilter(Mat* src);
 
 #endif

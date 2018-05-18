@@ -3,6 +3,7 @@
 
 Mat* rotateImage(Mat *src, bool show) {
 	Mat *original = new Mat(src->size(), src->type());
+	// showHoughLines(src);
 	*original = *src;
 	vector<Vec4i> *lines = getHoughLines(src);
 	vector<Vec4i> &lineAdr = *lines;
@@ -29,12 +30,12 @@ Mat* rotateImage(Mat *src, bool show) {
 	int x2 = longestVec[2];
 	int y2 = longestVec[3];
 
-	// printf("Vec: (%i, %i, %i, %i)\n", x1, y1, x2, y2);
-	// printf("Length: %lf\n", longestLength);
+	printf("Vec: (%i, %i, %i, %i)\n", x1, y1, x2, y2);
+	printf("Length: %lf\n", longestLength);
 
-	double ys = y1 - y2;
+	double ys = abs(y1 - y2);
 	// printf("Ys %lf\n", ys);
-	double xs = x1 - x2;
+	double xs = abs(x1 - x2);
 	// printf("Xs %lf\n", xs);
 	double ysxsdivided = ys/xs;
 	// printf("Result: %lf\n", ysxsdivided);
@@ -45,7 +46,7 @@ Mat* rotateImage(Mat *src, bool show) {
 
 	// printf("Tan Theta: %lf\n", ysxsdivided);
 	// printf("Radians: %lf\n", radians);
-	// printf("Should be rotating by %lf\n", degrees);
+	printf("Should be rotating by %lf\n", degrees);
 
 	Mat rotation = getRotationMatrix2D(center, -degrees, scale);
 
@@ -80,5 +81,16 @@ void printRotationMatrix(Mat &src) {
 			printf("%f, ", rowPtr[j]);
 		}
 		printf("\n");
+	}
+}
+
+void scale(Mat* src) {
+	int rows = src->rows;
+	int cols = src->cols;
+
+	if (rows == cols) {
+		if (rows != 1500) {
+			resize(*src, *src, Size(1500,1500));
+		}
 	}
 }

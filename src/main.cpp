@@ -83,9 +83,13 @@ int main(int argc, char const *argv[]) {
 
 	// showHoughLines(src);
 	// src = rotateImage(src, true);
-	getHoughCircles(src);
 
-	displayImage(src, "Helloworld");
+	// scale(src);
+	medianFilter(src);
+	medianFilter(src);
+	getHoughCircles(src, true);
+
+	// displayImage(src, "Helloworld");
 	// displayImage(filename);
 	// displayBlackWhiteImage(filename);
 	// displayOnlyBlackImage(filename);

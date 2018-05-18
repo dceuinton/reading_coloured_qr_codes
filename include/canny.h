@@ -17,7 +17,7 @@ void transformToCanny(Mat *src);
 
 vector<Vec4i>* getHoughLines(Mat* src);
 void showHoughLines(Mat *src);
-vector<Vec3f>* getHoughCircles(Mat* src);
+vector<Vec3f>* getHoughCircles(Mat* src, bool show);
 
 
 

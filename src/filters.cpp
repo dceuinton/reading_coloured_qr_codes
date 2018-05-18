@@ -56,3 +56,6 @@ void filterToOnlyBlue(Mat *src) {
 // 	cvtColor(*src, *src, COLOR_BGR2HSV);
 // }
 
+void medianFilter(Mat* src) {
+	medianBlur(*src, *src, 3);
+}
