@@ -7,6 +7,9 @@
 #include <cmath>
 // #include "medianFilter.h"
 // #include "decoding.h"
+#include "filters.h"
+#include "canny.h"
+#include "a2transforms.h"
 
 using namespace std;
 using namespace cv;
@@ -68,6 +71,21 @@ int main(int argc, char const *argv[]) {
 	}
 
 	printf("Opening %s\n", filename);
+
+	Mat *src = new Mat();
+	*src = imread(filename);
+
+	// filterToOnlyBlue(src);
+
+	// doCanny(src, true);
+
+	// transformToCanny(src);
+
+	// showHoughLines(src);
+	src = rotateImage(src, true);
+	// getHoughCircles(src);
+
+	displayImage(src, "Helloworld");
 	// displayImage(filename);
 	// displayBlackWhiteImage(filename);
 	// displayOnlyBlackImage(filename);
@@ -75,11 +93,11 @@ int main(int argc, char const *argv[]) {
 	// displayCannyTransform(filename);
 	// displayHoughTransform(filename);
 
-	const char *imageName = "images/rotatedTest.jpg";
-	Mat *image = rotateImage(filename, true);
-	imwrite(imageName, *image);
+	// const char *imageName = "images/rotatedTest.jpg";
+	// Mat *image = rotateImage(filename, true);
+	// imwrite(imageName, *image);
 
-	diplayAndPrintWidthAndHeightOfSquares(imageName, true);
+	// diplayAndPrintWidthAndHeightOfSquares(imageName, true);
 	// setWidthHeightAndPoints(filename);
 
 	// sampleFirstSegment(filename, true);
@@ -309,37 +327,37 @@ vector<Vec4i>* getHardCodedHoughLines(const char *filename) {
 	return lines;
 } 
 
-Mat* rotateImage(Mat *src, bool show) {
-	Mat *dst = new Mat(src->size(), CVCOLOUR);
-	vector<Vec4i> *lines = getHardCodedHoughLines(filename);
-	vector<Vec4i> &lineAdr = *lines;
+// Mat* rotateImage(Mat *src, bool show) {
+// 	Mat *dst = new Mat(src->size(), CVCOLOUR);
+// 	vector<Vec4i> *lines = getHardCodedHoughLines(filename);
+// 	vector<Vec4i> &lineAdr = *lines;
 
-	Point2f center(src->cols/2.0f, src->rows/2.0f);
+// 	Point2f center(src->cols/2.0f, src->rows/2.0f);
 
-	Vec4i vec = lineAdr[0]; 
-	int x1 = vec[0];
-	int y1 = vec[1];
-	int x2 = vec[2];
-	int y2 = vec[3];
+// 	Vec4i vec = lineAdr[0]; 
+// 	int x1 = vec[0];
+// 	int y1 = vec[1];
+// 	int x2 = vec[2];
+// 	int y2 = vec[3];
 
-	float tanTheta = (y1 + y2)/(x1 + x2);
-	float radians = atan(tanTheta);
-	float degrees = radians * 180/M_PI;
-	double scale = 1;
+// 	float tanTheta = (y1 + y2)/(x1 + x2);
+// 	float radians = atan(tanTheta);
+// 	float degrees = radians * 180/M_PI;
+// 	double scale = 1;
 
-	Mat rotation = getRotationMatrix2D(center, -degrees, scale);
+// 	Mat rotation = getRotationMatrix2D(center, -degrees, scale);
 
-	warpAffine(*src, *dst, rotation, dst->size(), INTER_LINEAR, BORDER_REPLICATE, 0);
+// 	warpAffine(*src, *dst, rotation, dst->size(), INTER_LINEAR, BORDER_REPLICATE, 0);
 
-	if (show) {
-		imshow("Testing Rotations", *dst);
-		waitKey(0);
-	}
-	delete lines;
-	lines = NULL;
+// 	if (show) {
+// 		imshow("Testing Rotations", *dst);
+// 		waitKey(0);
+// 	}
+// 	delete lines;
+// 	lines = NULL;
 
-	return dst;
-}
+// 	return dst;
+// }
 
 Mat* filterToBlue(Mat *src) {
 	uchar *rowPtr;
