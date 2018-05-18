@@ -33,7 +33,7 @@ const int SEG2_HEIGHT = 35;
 const int SEG3_WIDTH  = 35;
 const int SEG3_HEIGHT = 6;
 
-const char *defaultFilename = "images/abcde.jpg";
+const char *defaultFilename = "images/abcde_rotated.jpg";
 
 int boxWidth  = 20;
 int boxHeight = 20;
@@ -75,6 +75,7 @@ int main(int argc, char const *argv[]) {
 	printf("Opening %s\n", filename);
 
 	Mat *src = new Mat();
+	Mat original = imread(filename);
 	// Mat *src2 = new Mat();
 	*src = imread(filename);
 	// *src2 = imread(filename);
@@ -83,11 +84,16 @@ int main(int argc, char const *argv[]) {
 	medianFilter(src);
 	rotateBasedOnCircles(src);
 
-	// getAnchor(src);
+	// getHoughCircles(src, false);
+
+	uchar *row = src->ptr<uchar>(358);
+	printf("Values are: (%u, %u, %u)\n", row[358], row[359], row[360]);
+
+	uchar *row2 = original.ptr<uchar>(358);
+	printf("Original are: (%u, %u, %u)\n", row2[358], row2[359], row2[360]);
+	
 	vector<int> numbers = sampleSegment(src);
 	readMessage(numbers);
-
-
 	displayImage(src, filename);
 	
 

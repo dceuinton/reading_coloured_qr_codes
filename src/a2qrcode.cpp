@@ -176,19 +176,43 @@ vector<int> sampleSegment(Mat *src) {
 	int xStart = xAnchor;
 	int yStart = yAnchor;
 
-	printf("Step: %i\n", step);
+	// printf("Step: %i\n", step);
 
 	uchar *row;
-	// for (int i = 0; i < SEG1_H; i++) {
-	for (int i = 0; i < 1; i++) {
+	for (int i = 0; i < SEG1_H; i++) {
+	// for (int i = 0; i < 1; i++) {
 		row = src->ptr<uchar>(yStart + i*step);
-		// for (int j = 0; j < SEG1_W; j++) {
-		for (int j = 0; j < 5; j++) {
-			b = row[xStart + j*step];
-			g = row[xStart + j*step + 1];
-			r = row[xStart + j*step + 2];
+		for (int j = 0; j < SEG1_W; j++) {
+		// for (int j = 0; j < 6; j++) {
+			b = row[(xStart + j*step)*src->channels() ];
+			g = row[(xStart + j*step)*src->channels() + 1 ];
+			r = row[(xStart + j*step)*src->channels() + 2 ];
 
-			printf("BGR: (%u, %u, %u)\n", b, g, r);
+			// printf("BGR: (%u, %u, %u)\n", b, g, r);
+
+			checkPush(b, output);
+			checkPush(g, output);
+			checkPush(r, output);
+
+			Point center(xStart + j*step, yStart + i*step);
+			circle(*src, center, 3, Scalar(0, 0, 255), 3);
+
+			// printf("XY: (%i, %i))\n", xStart + j*step, yStart + i*step);
+		}
+	}
+
+	// printBinary(output);
+
+	xStart -= 6*step;
+	yStart += 6*step;
+
+	for (int i = 0; i < SEG2_H; i++) {
+	// for (int i = 0; i < 1; i++) {
+		row = src->ptr<uchar>(yStart + i*step);
+		for (int j = 0; j < SEG2_W; j++) {
+			b = row[(xStart + j*step)*src->channels() ];
+			g = row[(xStart + j*step)*src->channels()  + 1];
+			r = row[(xStart + j*step)*src->channels()  + 2];
 
 			checkPush(b, output);
 			checkPush(g, output);
@@ -199,47 +223,25 @@ vector<int> sampleSegment(Mat *src) {
 		}
 	}
 
-	printBinary(output);
+	xStart += 6*step;
+	yStart += 35*step;
 
-	// xStart -= 6*step;
-	// yStart += 6*step;
+	for (int i = 0; i < SEG3_H; i++) {
+	// for (int i = 0; i < 1; i++) {
+		row = src->ptr<uchar>(yStart + i*step);
+		for (int j = 0; j < SEG3_W; j++) {
+			b = row[(xStart + j*step)*src->channels() ];
+			g = row[(xStart + j*step)*src->channels()  + 1];
+			r = row[(xStart + j*step)*src->channels()  + 2];
 
-	// for (int i = 0; i < SEG2_H; i++) {
-	// // for (int i = 0; i < 1; i++) {
-	// 	row = src->ptr<uchar>(yStart + i*step);
-	// 	for (int j = 0; j < SEG2_W; j++) {
-	// 		b = row[xStart + j*step];
-	// 		g = row[xStart + j*step + 1];
-	// 		r = row[xStart + j*step + 2];
+			checkPush(b, output);
+			checkPush(g, output);
+			checkPush(r, output);
 
-	// 		checkPush(b, output);
-	// 		checkPush(g, output);
-	// 		checkPush(r, output);
-
-	// 		Point center(xStart + j*step, yStart + i*step);
-	// 		circle(*src, center, 3, Scalar(0, 0, 255), 3);
-	// 	}
-	// }
-
-	// xStart += 6*step;
-	// yStart += 35*step;
-
-	// for (int i = 0; i < SEG3_H; i++) {
-	// // for (int i = 0; i < 1; i++) {
-	// 	row = src->ptr<uchar>(yStart + i*step);
-	// 	for (int j = 0; j < SEG3_W; j++) {
-	// 		b = row[xStart + j*step];
-	// 		g = row[xStart + j*step + 1];
-	// 		r = row[xStart + j*step + 2];
-
-	// 		checkPush(b, output);
-	// 		checkPush(g, output);
-	// 		checkPush(r, output);
-
-	// 		Point center(xStart + j*step, yStart + i*step);
-	// 		circle(*src, center, 3, Scalar(0, 0, 255), 3);
-	// 	}
-	// }
+			Point center(xStart + j*step, yStart + i*step);
+			circle(*src, center, 3, Scalar(0, 0, 255), 3);
+		}
+	}
 
 	return output;
 }
