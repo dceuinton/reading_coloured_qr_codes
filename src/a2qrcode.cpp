@@ -60,8 +60,8 @@ int getBoxWidth(vector<Vec4i> *lines, int rows, int cols) {
 		}
 	}
 
-	printf("Highest Vector Heights, %i, %i\n", highestHorizontal[1], highestHorizontal[3]);
-	printf("Next Highest Vector Heights, %i, %i\n", nextHighestHorizontal[1], nextHighestHorizontal[3]);
+	// printf("Highest Vector Heights, %i, %i\n", highestHorizontal[1], highestHorizontal[3]);
+	// printf("Next Highest Vector Heights, %i, %i\n", nextHighestHorizontal[1], nextHighestHorizontal[3]);
 
 	return middleHeight(nextHighestHorizontal) - middleHeight(highestHorizontal);
 }
